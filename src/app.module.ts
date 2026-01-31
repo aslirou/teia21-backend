@@ -24,6 +24,21 @@ import { Contact } from './contact/contact.entity';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const isProduction = configService.get('NODE_ENV') === 'production';
+        const databaseUrl = configService.get('DATABASE_URL');
+
+        // Se DATABASE_URL existe (Railway interno), usa ela
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities: [Contact],
+            synchronize: !isProduction,
+            logging: !isProduction,
+            ssl: { rejectUnauthorized: false },
+          };
+        }
+
+        // Senão, usa variáveis individuais (desenvolvimento local ou externo)
         const isRemoteDb = configService.get('DB_HOST', 'localhost') !== 'localhost';
 
         return {
